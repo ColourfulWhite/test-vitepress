@@ -45,6 +45,9 @@ jobs:
         run: pnpm install
       - name: Build with VitePress
         run: pnpm docs:build
+      - name: Setup custom domain
+        if: vars.CNAME != ''
+        run: echo -e "${{ vars.CNAME }}" > src/.vitepress/dist/CNAME
       - name: Setup robots.txt
         if: vars.ROBOTS != ''
         run: echo -e "${{ vars.ROBOTS }}" > src/.vitepress/dist/robots.txt
@@ -55,13 +58,23 @@ jobs:
 
   # 部署工作
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
     runs-on: ubuntu-latest
-    name: Deploy
+    needs: build
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Download built artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: dist
+
+      - name: Init new repo
+        run: |
+          cd dist
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add origin https://${{ secrets.DEPLOY_REPO_PAT }}@github.com/ColourfulWhite/test-vitepress-deploy.git
+          git checkout -b gh-pages
+          git add .
+          git commit -m "Deploy from master"
+          git push origin gh-pages -f -q
