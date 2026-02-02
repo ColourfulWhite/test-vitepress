@@ -66,14 +66,19 @@ jobs:
         with:
           name: github-pages
           path: dist
+      
+      - name: Extract artifact
+        run: |
+         mkdir output
+         tar -xf dist/artifact.tar -C output
 
       - name: Init new repo
         run: |
-          cd dist
+          cd output
           git init
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote add origin https://${{ secrets.DEPLOY_REPO_PAT }}@github.com/ColourfulWhite/test-vitepress-deploy.git
+          git remote add origin https://${{ secrets.DEPLOY_REPO_PAT }}@github.com@github.com/ColourfulWhite/test-vitepress-deploy.git
           git checkout -b gh-pages
           git add .
           git commit -m "Deploy from master"
